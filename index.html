@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Rounded Rectangle</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: flex-start; /* Align content to the left */
+            align-items: flex-start; /* Align content to the top */
+            height: 100vh;
+            width: 100vw;
+            background-color: #1B1B1B;
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
+        :root {
+                --currentDayIndex: 0;
+        }
+
+        .rounded-block {
+            margin: 70px 50px 40px 250px; /* Top, right, bottom, left margins */
+            width: calc(100% - 300px); /* 250px left + 50px right */
+            height: calc(100% - 110px); /* 70px top + 40px bottom */
+            border-radius: 15px;
+            background-color: #131314;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 1620px; /* 1920px - 250px - 50px */
+            max-height: 970px; /* 1080px - 70px - 40px */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .week-head {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 7 equal columns */
+            grid-template-rows: 20px 80px; /* Two rows: 20px and 80px */
+            width: calc(100% - 80px); /* Adjusted for left padding */
+            padding: 0 80px; /* Left and right padding */
+            background-color: #131314;
+            color: white;
+            font-size: 14px;
+        }
+
+        .week-head .day {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+        }
+
+        .week-head .date {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            font-size: 16px;
+        }
+
+        .week-head .highlight {
+            color: #73B9FA;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr); /* First column fixed width, 7 for days */
+            grid-template-rows: repeat(24, 40px); /* 24 rows, each 40px tall */
+            width: 100%; /* Full width of parent */
+            height: calc(100% - 140px); /* Adjusted for top padding */
+            margin-top: 0; /* Remove vertical gap */
+            overflow-y: auto; /* Enable vertical scrolling */
+            scrollbar-width: thin; /* Customize scrollbar for modern browsers */
+            background-color: #131314;
+            position: relative; /* For positioning the red line */
+        }
+
+        .time-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 12px;
+            border: none; /* No borders for time column */
+            padding-top: 40px;
+        }
+
+        .grid-cell {
+            border-left: 1px solid #333537; /* Left border */
+            border-top: 1px solid #333537; /* Top border */
+            box-sizing: border-box; /* Ensure borders don't affect size */
+        }
+
+        .grid-cell:nth-child(8n+8) { /* Last column */
+            border-right: none;
+        }
+
+        .grid-cell:nth-last-child(-n+8) { /* Last row */
+            border-bottom: none;
+        }
+
+        .red-line {
+            position: absolute;
+            height: 2px;
+            background-color: red;
+            width: calc(100%/7 - 80px/7); /* Exclude time column */
+            left: calc(80px + (100%/7 - 80px/7)*var(--currentDayIndex)); /* Start after time column */
+            z-index: 10; /* Ensure it appears above the grid */
+        }
+    </style>
+</head>
+<body>
+    <div class="rounded-block">
+        <div class="week-head">
+            <div class="day">Пн</div>
+            <div class="day">Вт</div>
+            <div class="day">Ср</div>
+            <div class="day">Чт</div>
+            <div class="day">Пт</div>
+            <div class="day">Сб</div>
+            <div class="day">Вс</div>
+            <script>
+                const weekDates = document.querySelector('.week-head');
+                const tmp_today = new Date();
+                const today = new Date();
+                const firstDayOfWeek = new Date(tmp_today.setDate(tmp_today.getDate() - tmp_today.getDay() + 1));
+
+                const currentDayIndex = today.getDay() - 1; // Get current day index (0 for Monday, 6 for Sunday)
+
+                for (let i = 0; i < 7; i++) {
+                    const dateCell = document.createElement('div');
+                    dateCell.className = 'date';
+
+                    const currentDate = new Date(firstDayOfWeek);
+                    currentDate.setDate(firstDayOfWeek.getDate() + i);
+
+                    if (i === currentDayIndex) {
+                        dateCell.classList.add('highlight');
+                        weekDates.children[i].classList.add('highlight');
+                    }
+
+                    dateCell.textContent = currentDate.getDate();
+                    weekDates.appendChild(dateCell);
+                }
+            </script>
+        </div>
+        <div class="grid-container">
+            <script>
+                const gridContainer = document.querySelector('.grid-container');
+
+                for (let row = 1; row <= 24; row++) {
+                    const timeCell = document.createElement('div');
+                    timeCell.className = 'time-cell';
+                    const hour = row.toString().padStart(2, '0');
+                    if (row < 24) {
+                        timeCell.textContent = `${hour}:00`;
+                        }
+                    gridContainer.appendChild(timeCell);
+
+                    for (let col = 0; col < 7; col++) {
+                        const gridCell = document.createElement('div');
+                        gridCell.className = 'grid-cell';
+                        gridContainer.appendChild(gridCell);
+                    }
+                }
+
+                // Add red line
+                const redLine = document.createElement('div');
+                redLine.className = 'red-line';
+
+                // Calculate position of the red line
+                const currentDate = new Date();
+                const hours = currentDate.getHours();
+                const minutes = currentDate.getMinutes();
+
+                const rowHeight = 40; // Height of each row in pixels
+                const linePosition = (hours * rowHeight) + (minutes / 60 * rowHeight);
+
+                redLine.style.top = `${linePosition}px`;
+
+                // Place in current day's column
+                const dayIndex = (currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1); // Adjust for Sunday
+                const dayWidth = gridContainer.offsetWidth / 7;
+<!--                redLine.style.left = `${80 + dayIndex * dayWidth}px`;-->
+
+
+                gridContainer.appendChild(redLine);
+                document.documentElement.style.setProperty("--currentDayIndex", dayIndex);
+            </script>
+        </div>
+    </div>
+</body>
+</html>
